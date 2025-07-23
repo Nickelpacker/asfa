@@ -45,7 +45,7 @@ namespace ClientPlugin.Settings
         public SettingsGenerator()
         {
             Attributes = ExtractAttributes();
-            Name = Config.Current.Title;
+            Name = GpsClipboardConfig.Current.Title;
             ActiveLayout = new Layouts.None(()=>Controls);
             Dialog = new SettingsScreen(Name, OnRecreateControls, size: ActiveLayout.SettingsPanelSize);
         }
@@ -83,12 +83,12 @@ namespace ClientPlugin.Settings
         {
             var config = new List<AttributeInfo>();
 
-            foreach (var propertyInfo in typeof(Config).GetProperties())
+            foreach (var propertyInfo in typeof(GpsClipboardConfig).GetProperties())
             {
                 string name = propertyInfo.Name;
                 
-                object getter() => propertyInfo.GetValue(Config.Current);
-                void setter(object value) => propertyInfo.SetValue(Config.Current, value);
+                object getter() => propertyInfo.GetValue(GpsClipboardConfig.Current);
+                void setter(object value) => propertyInfo.SetValue(GpsClipboardConfig.Current, value);
 
                 foreach (var attribute in propertyInfo.GetCustomAttributes())
                 {
@@ -114,7 +114,7 @@ namespace ClientPlugin.Settings
                 }
             }
 
-            foreach (var methodInfo in typeof(Config).GetMethods())
+            foreach (var methodInfo in typeof(GpsClipboardConfig).GetMethods())
             {
                 string name = methodInfo.Name;
                 Delegate method = getDelegate(methodInfo);

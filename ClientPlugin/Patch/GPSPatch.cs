@@ -8,12 +8,14 @@ using System.Reflection;
 using System.Threading;
 using ClientPlugin.Settings.Elements;
 using System.Linq;
+using ClientPlugin;
+using System.Runtime.InteropServices;
 
 
 [HarmonyPatch]
 public static class GPSPatch
 {
-    public const string TG = "[GPSPlugin]";
+    static readonly string TG = Plugin.TG;
     static MethodBase TargetMethod()
     {
         Type collectionType = typeof(Sandbox.Game.Multiplayer.MyGpsCollection);
@@ -27,9 +29,15 @@ public static class GPSPatch
         }
 
         MethodBase method = AccessTools.Method(collectionType, "AddGpsLocal", new[] { addMsgType, myGpsType });
-
         if (method == null)
+        {
             MyLog.Default.WriteLineAndConsole($"{TG} ERROR: Could not find AddGpsLocal");
+            foreach (var m in collectionType.GetMethods(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public))
+            {
+                MyLog.Default.WriteLineAndConsole($"{TG} Method: {m.Name} ({string.Join(", ", m.GetParameters().Select(p => p.ParameterType.Name))})");
+            }
+        }
+
 
         return method;
     }
@@ -84,13 +92,36 @@ public static class GPSPatch
                 }.Start();
 
             }
-            if (MyAPIGateway.Session?.GPS != null)
+            MyAPIGateway.Utilities.InvokeOnGameThread(() =>
             {
-                var gpsList = MyAPIGateway.Session.GPS.GetGpsList(identityId);
-                var matching = gpsList?.FirstOrDefault(g => g.Name == name);
-
-                if (matching != null)
+                try
                 {
+                    if (Plugin.Config?.EnableColorRandomizer != true)
+                    {
+                        MyLog.Default.WriteLineAndConsole("[GPSPlugin] Color randomizer disabled in config.");
+                        return;
+                    }
+                    if (Plugin.Config.IgnoreSignals && identityId == 0)
+                    {
+                        MyLog.Default.WriteLineAndConsole("[GPSPlugin] Skipping colorization for signal (identityId = 0).");
+                        return;
+                    }
+                    var gpsSystem = MyAPIGateway.Session?.GPS;
+                    if (gpsSystem == null)
+                    {
+                        MyLog.Default.WriteLineAndConsole("[GPSPlugin] GPS system still not available.");
+                        return;
+                    }
+
+                    var gpsList = gpsSystem.GetGpsList(identityId);
+                    var matching = gpsList?.FirstOrDefault(g => g?.Name == name);
+
+                    if (matching == null)
+                    {
+                        MyLog.Default.WriteLineAndConsole($"[GPSPlugin] Could not find GPS '{name}' to colorize.");
+                        return;
+                    }
+
                     var rand = new Random();
                     var randomColor = new Color(
                         (byte)rand.Next(50, 256),
@@ -99,14 +130,17 @@ public static class GPSPatch
                     );
 
                     matching.GPSColor = randomColor;
-                    MyAPIGateway.Session.GPS.ModifyGps(identityId, matching); // <- this forces a UI refresh
-                    MyLog.Default.WriteLineAndConsole($"[GPSPlugin] Colorized GPS: {name} => {randomColor}");
+                    gpsSystem.ModifyGps(identityId, matching);
+
+                    MyLog.Default.WriteLineAndConsole($"[GPSPlugin] Colorized GPS: {matching.Name} => {randomColor}");
                 }
-                else
+                catch (Exception ex)
                 {
-                    MyLog.Default.WriteLineAndConsole($"[GPSPlugin] Could not find GPS '{name}' to colorize.");
+                    MyLog.Default.WriteLineAndConsole($"[GPSPlugin] Exception during delayed colorizer: {ex}");
                 }
-            }
+            });
+
+
 
         }
         catch (Exception ex)

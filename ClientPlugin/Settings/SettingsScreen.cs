@@ -4,6 +4,9 @@ using System;
 using System.Collections.Generic;
 using ClientPlugin.Settings.Elements;
 using VRageMath;
+using EmptyKeys.UserInterface.Generated.RespawnScreen_Bindings;
+using VRage.Game;
+using VRage.Utils;
 
 namespace ClientPlugin.Settings
 {
@@ -39,7 +42,6 @@ namespace ClientPlugin.Settings
             CanBeHidden = true;
             CloseButtonEnabled = true;
         }
-
         public void UpdateSize(Vector2 screenSize)
         {
             Size = screenSize;
@@ -54,19 +56,51 @@ namespace ClientPlugin.Settings
 
         public override void OnRemoved()
         {
-            ConfigStorage.Save(Config.Current);
+            ConfigStorage.Save(GpsClipboardConfig.Current);
             base.OnRemoved();
         }
 
         public override void RecreateControls(bool constructor)
         {
             base.RecreateControls(constructor);
-            AddCaption(Name);
+            AddCaption(FriendlyName); // use FriendlyName, not Name
 
             foreach (var item in GetControls())
             {
                 Controls.Add(item);
             }
+
+            // Create and add the close button
+            var closeButton = new MyGuiControlButton
+            {
+                Text = "Close",
+                Position = new Vector2(0f, Size.Value.Y / 2f - 0.05f), // adjust to bottom
+                OriginAlign = VRage.Utils.MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_BOTTOM,
+                VisualStyle = VRage.Game.MyGuiControlButtonStyleEnum.Default,
+                
+            };
+            var helpBox = new MyGuiControlMultilineText
+            {
+                Position = new Vector2(0f, 0f),
+                Size = new Vector2(0.25f, 0.2f),
+                OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER,
+                TextAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP,
+                Font = MyFontEnum.White,
+            };
+
+            helpBox.Text.Clear();
+            helpBox.Text.AppendLine("Available Chat Commands:");
+            helpBox.Text.AppendLine("/gpsreload - Reload the config file");
+            helpBox.Text.AppendLine("/gpshelp   - List all available GPS commands");
+            closeButton.ButtonClicked += _ =>
+            {
+                CloseScreen();
+                ConfigStorage.Save(GpsClipboardConfig.Current);
+                Plugin.Config = ConfigStorage.Load();
+            };
+            Controls.Add(closeButton);
+            Controls.Add(helpBox);
         }
+
     }
 }

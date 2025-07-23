@@ -11,33 +11,34 @@ namespace ClientPlugin.Settings
         private static readonly string ConfigFileName = string.Concat(Plugin.Name, ".cfg");
         private static string ConfigFilePath => Path.Combine(MyFileSystem.UserDataPath, "Storage", ConfigFileName);
 
-        public static void Save(Config config)
+        public static void Save(GpsClipboardConfig config)
         {
             var path = ConfigFilePath;
             using (var text = File.CreateText(path))
-                new XmlSerializer(typeof(Config)).Serialize(text, config);
+                new XmlSerializer(typeof(GpsClipboardConfig)).Serialize(text, config);
         }
 
-        public static Config Load()
+        public static GpsClipboardConfig Load()
         {
             var path = ConfigFilePath;
             if (!File.Exists(path))
             {
-                return Config.Default;
+                return GpsClipboardConfig.Default;
             }
 
-            var xmlSerializer = new XmlSerializer(typeof(Config));
+            var xmlSerializer = new XmlSerializer(typeof(GpsClipboardConfig));
             try
             {
+                MyLog.Default.WriteLineAndConsole($"{Plugin.TG} Config file loaded");
                 using (var streamReader = File.OpenText(path))
-                    return (Config)xmlSerializer.Deserialize(streamReader) ?? Config.Default;
+                    return (GpsClipboardConfig)xmlSerializer.Deserialize(streamReader) ?? GpsClipboardConfig.Default;
             }
             catch (Exception)
             {
                 MyLog.Default.Warning($"{ConfigFileName}: Failed to read config file: {ConfigFilePath}");
             }
             
-            return Config.Default;
+            return GpsClipboardConfig.Default;
         }
         
     }

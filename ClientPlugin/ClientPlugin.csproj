@@ -629,7 +629,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Config.cs" />
+    <Compile Include="GpsClipboardConfig.cs" />
+    <Compile Include="Patch\ChatCmds.cs" />
     <Compile Include="Patch\GPSPatch.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
