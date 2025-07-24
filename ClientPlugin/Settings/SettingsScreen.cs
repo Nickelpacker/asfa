@@ -7,6 +7,7 @@ using VRageMath;
 using EmptyKeys.UserInterface.Generated.RespawnScreen_Bindings;
 using VRage.Game;
 using VRage.Utils;
+using System.Text;
 
 namespace ClientPlugin.Settings
 {
@@ -79,19 +80,20 @@ namespace ClientPlugin.Settings
                 VisualStyle = VRage.Game.MyGuiControlButtonStyleEnum.Default,
                 
             };
+            StringBuilder stringBuilder = new StringBuilder("");
+            stringBuilder.AppendLine("Available Chat Commands:");
+            stringBuilder.AppendLine("/gpsreload - Reload the config file");
+            stringBuilder.AppendLine("/gpshelp   - List all available GPS commands");
             var helpBox = new MyGuiControlMultilineText
             {
+                
                 Position = new Vector2(0f, 0f),
                 Size = new Vector2(0.25f, 0.2f),
-                OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_CENTER_AND_VERTICAL_CENTER,
+                OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_CENTER,
                 TextAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP,
                 Font = MyFontEnum.White,
+                Text = stringBuilder,
             };
-
-            helpBox.Text.Clear();
-            helpBox.Text.AppendLine("Available Chat Commands:");
-            helpBox.Text.AppendLine("/gpsreload - Reload the config file");
-            helpBox.Text.AppendLine("/gpshelp   - List all available GPS commands");
             closeButton.ButtonClicked += _ =>
             {
                 CloseScreen();
